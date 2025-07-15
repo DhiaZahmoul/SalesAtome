@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tunisia Delivery Map</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 100vh; }
+    table {
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    td {
+      padding: 4px 8px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([34.8, 9.8], 6); // Center Tunisia
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data © OpenStreetMap contributors'
+    }).addTo(map);
+
+    fetch('data.json')
+  .then(response => response.json())
+  .then(data => {
+    data.forEach(point => {
+      const marker = L.circleMarker([point.Latitude, point.Longitude], {
+        radius: 6,
+        color: 'red',
+        fillColor: 'red',
+        fillOpacity: 0.8
+      }).addTo(map);
+
+      // Create a unique ID for the button to avoid conflicts
+      const buttonId = `copy-btn-${point.Phone}`;
+
+      const popupContent = `
+        <table>
+          <tr><td><strong>Name</strong></td><td>${point.Name}</td></tr>
+          <tr><td><strong>Phone</strong></td><td>${point.Phone}</td></tr>
+          <tr><td><strong>Localité</strong></td><td>${point.Localite}</td></tr>
+          <tr><td><strong>Adresse</strong></td><td>${point.Adress}</td></tr>
+          <tr><td colspan="2" style="text-align:center;">
+            <button id="${buttonId}">Copy Address</button>
+          </td></tr>
+        </table>
+      `;
+
+      marker.bindPopup(popupContent);
+
+      marker.on('popupopen', () => {
+        document.getElementById(buttonId).addEventListener('click', () => {
+          const mapsLink = `https://www.google.com/maps/search/?api=1&query=${point.Latitude},${point.Longitude}`;
+          navigator.clipboard.writeText(mapsLink).then(() => {
+            alert('Google Maps link copied to clipboard!');
+          }, () => {
+            alert('Failed to copy link.');
+          });
+        });
+      });
+    });
+  });
+
+  </script>
+</body>
+</html>
